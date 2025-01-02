@@ -118,12 +118,6 @@ public class Game : MonoBehaviour
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R))
-        {
-            ShowBetInput();
-            return;
-        }
-
         if (!gameover)
         {
             if (Input.GetMouseButtonDown(0))
@@ -221,9 +215,11 @@ public class Game : MonoBehaviour
         }
 
         gameover = true;
-        Debug.Log("You revealed all safe tiles! You win!");
+        float winnings = GetWinnings();
+        Debug.Log($"You revealed all safe tiles! You win {winnings} coins!");
         UpdateUI();
     }
+
 
     private bool TryGetCellAtMousePosition(out Cell cell)
     {
@@ -307,11 +303,25 @@ public class Game : MonoBehaviour
     {
         if (!gameover)
         {
-            int winnings = Mathf.CeilToInt(betAmount * multiplier);
-            playerCoins += winnings;
+            float winnings = GetWinnings();
+            playerCoins += Mathf.CeilToInt(winnings);
             Debug.Log($"You cashed out! You won {winnings} coins. Total coins: {playerCoins}");
             gameover = true;
             ShowBetInput();
         }
     }
+
+    public float GetWinnings()
+    {
+        if (gameover)
+        {
+            return betAmount * multiplier;
+        }
+        else
+        {
+            Debug.LogWarning("Game is not over yet. Winnings cannot be calculated.");
+            return 0f;
+        }
+    }
+
 }
