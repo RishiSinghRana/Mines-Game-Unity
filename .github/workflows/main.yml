@@ -1,0 +1,131 @@
+name: Build Unity Project
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build my project
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - WebGL # WebGL.
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      # Checkout (without LFS)
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Git LFS
+      - name: Create LFS file list
+        run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
+
+      - name: Restore LFS cache
+        uses: actions/cache@v4
+        id: lfs-cache
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfs-assets-id') }}
+
+      - name: Git LFS Pull
+        run: |
+          git lfs pull
+          git add .
+          git reset --hard
+
+      # Cache
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-${{ matrix.targetPlatform }}
+            Library-
+
+      # Test
+      #- name: Run tests
+      #  uses: game-ci/unity-test-runner@v4
+      #  env:
+      #    UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+      #    UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+      #    UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      #  with:
+      #    githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract date
+        id: extract_date
+        run: |
+          COMMIT_DATE=$(date +'%Y.%m.%d')
+          echo "COMMIT_DATE=${COMMIT_DATE}" >> $GITHUB_ENV
+          echo "$COMMIT_DATE"
+
+      - name: Get commit message header
+        id: get_commit_message
+        run: |
+          COMMIT_ID=$(git log -1 --pretty=%h)
+          echo "COMMIT_ID=${COMMIT_ID}" >> $GITHUB_ENV
+          echo "$COMMIT_ID"
+
+      # Build
+      - name: Build project
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: ${{ matrix.targetPlatform }}
+          allowDirtyBuild: true
+
+      - name: Edit index.html
+        run: |
+            set -x
+            export INDEX=$(find ./ -name index.html)
+            perl -i -pe 's/width=960 height=600/width=auto height=auto/' $INDEX
+            perl -i -pe 's/style="width: 960px; height: 600px;/style="width: 100%; height: 100%;/' $INDEX
+            perl -i -pe 's/}\);/});\n      var WAMScore = 0; var getWAMScore = msg => (WAMScore = parseInt(msg), console.log("Win:" + WAMScore));/' $INDEX
+
+      # Output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Build (${{ matrix.targetPlatform }})_${{ env.DATE }}_${{ env.COMMIT_MESSAGE_HEADER}}
+          path: build/${{ matrix.targetPlatform }}
+          
+  release:
+    name: Release my project
+    needs: [build]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        targetPlatform:
+          - WebGL # WebGL.
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      # Create a release
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.DATE }}_${{ env.COMMIT_MESSAGE_HEADER}}
+          release_name: ${{ matrix.targetPlatform }}_${{ env.DATE }}_${{ env.COMMIT_MESSAGE_HEADER}}
+          draft: false
+          prerelease: false
+          
+
+      # Upload build artifacts to the release
+      - name: Upload Release Asset
+        uses: tanyagray/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: build/${{ matrix.targetPlatform }}
+          asset_name: Build_${{ matrix.targetPlatform }}_${{ env.DATE }}_${{ env.COMMIT_MESSAGE_HEADER}}.zip
+          asset_content_type: application/zip

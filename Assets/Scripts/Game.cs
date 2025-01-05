@@ -303,13 +303,22 @@ public class Game : MonoBehaviour
     {
         if (!gameover)
         {
-            float winnings = GetWinnings();
-            playerCoins += Mathf.CeilToInt(winnings);
+            // Calculate winnings even if the game isn't officially over.
+            int winnings = Mathf.CeilToInt(betAmount * multiplier);
+            playerCoins += winnings;
+
             Debug.Log($"You cashed out! You won {winnings} coins. Total coins: {playerCoins}");
+
+            // End the game and reset UI.
             gameover = true;
             ShowBetInput();
         }
+        else
+        {
+            Debug.LogWarning("You cannot cash out after the game is already over.");
+        }
     }
+
 
     public float GetWinnings()
     {
