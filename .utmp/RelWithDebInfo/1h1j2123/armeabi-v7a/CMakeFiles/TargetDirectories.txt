@@ -1,5 +1,0 @@
-C:/Users/Rishi/Desktop/Mines Game/Mines Game/.utmp/RelWithDebInfo/1h1j2123/armeabi-v7a/CMakeFiles/edit_cache.dir
-C:/Users/Rishi/Desktop/Mines Game/Mines Game/.utmp/RelWithDebInfo/1h1j2123/armeabi-v7a/CMakeFiles/rebuild_cache.dir
-C:/Users/Rishi/Desktop/Mines Game/Mines Game/.utmp/RelWithDebInfo/1h1j2123/armeabi-v7a/FramePacing/CMakeFiles/swappywrapper.dir
-C:/Users/Rishi/Desktop/Mines Game/Mines Game/.utmp/RelWithDebInfo/1h1j2123/armeabi-v7a/FramePacing/CMakeFiles/edit_cache.dir
-C:/Users/Rishi/Desktop/Mines Game/Mines Game/.utmp/RelWithDebInfo/1h1j2123/armeabi-v7a/FramePacing/CMakeFiles/rebuild_cache.dir
