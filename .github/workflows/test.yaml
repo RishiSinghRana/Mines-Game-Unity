@@ -1,0 +1,16 @@
+name: Experiments
+
+#on: [push, pull_request]
+
+on: [workflow_dispatch]
+  
+jobs:
+  Test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+     - name: Checking Directory
+       run: |
+         pwd -P
+         which zip
+         zip --help
