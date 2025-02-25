@@ -34,20 +34,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Check if there was a recent push
-        id: check_push
-        run: |
+      #- name: Check if there was a recent push
+        #id: check_push
+        #run: |
           # Get the timestamp of the last commit
-          last_push=$(git log -1 --format=%ct)
-          current_time=$(date +%s)
-          time_diff=$((current_time - last_push))
+          #last_push=$(git log -1 --format=%ct)
+          #current_time=$(date +%s)
+          #time_diff=$((current_time - last_push))
           
           # Define a threshold (e.g., 12 hours = 43200 seconds)
-          if [ $time_diff -gt 43200 ]; then
-            echo "No recent push. Skipping scheduled job."
-            exit 1  # Fail the step to stop further execution
-          fi
-          echo "Recent push detected, continuing with the scheduled job."
+          #if [ $time_diff -gt 43200 ]; then
+            #echo "No recent push. Skipping scheduled job."
+            #exit 1  # Fail the step to stop further execution
+          #fi
+          #echo "Recent push detected, continuing with the scheduled job."
 
       # Git LFS
       - name: Create LFS file list
@@ -148,7 +148,7 @@ jobs:
           BUILD_VERSION: ${{ needs.build.outputs.output1 }}
           BUILD_COMMIT_ID: ${{ needs.build.outputs.output2 }}
         with:
-          name: WhackAMole_${{ matrix.targetPlatform }}_${{ env.BUILD_VERSION }}_${{ env.BUILD_COMMIT_ID }}
+          name: MinesGame_${{ matrix.targetPlatform }}_${{ env.BUILD_VERSION }}_${{ env.BUILD_COMMIT_ID }}
           tag_name: ${{ matrix.targetPlatform }}_${{ env.BUILD_VERSION }}_${{ env.BUILD_COMMIT_ID }}
           files: |
             build-artifacts/${{ matrix.targetPlatform }}/${{ matrix.targetPlatform }}_${{ env.BUILD_VERSION }}_${{ env.BUILD_COMMIT_ID }}.zip
