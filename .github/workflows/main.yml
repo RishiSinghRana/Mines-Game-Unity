@@ -7,8 +7,8 @@ on:
   workflow_dispatch:
 
   # Scheduled trigger: This runs the workflow on a schedule (daily at midnight UTC)
-  schedule:
-    - cron: '0 0 * * *'  # Every day at midnight UTC
+  #schedule:
+    #- cron: '0 0 * * *'  # Every day at midnight UTC
 
 permissions:
   contents: write
