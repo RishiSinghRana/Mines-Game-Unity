@@ -1,15 +1,23 @@
-name: Delete old workflow runs
+name: Cleanup Old Workflow Runs
+
 on:
   schedule:
-    - cron: '0 0 1 * *' # Run monthly, at 00:00 on the 1st day of month.
+    - cron: '0 3 * * *' # Runs daily at 3 AM UTC
+  workflow_dispatch: # Allows manual trigger
+
+permissions:
+  actions: write
+
 jobs:
-  del_runs:
+  cleanup:
+    name: Delete Old Runs
     runs-on: ubuntu-latest
+
     steps:
-      - name: Delete workflow runs
-        uses: JuvenileQ/delete-workflow-runs@main
+      - name: Delete Old Workflow Runs
+        uses: Mattraks/delete-workflow-runs@v2
         with:
-          token: ${{ github.token }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
-          retain_days: 30
-          keep_minimum_runs: 10
+          retain_days: 7   # Keep only the last 7 days of runs
+          keep_minimum_runs: 5 # Always keep at least the last 5 runs
