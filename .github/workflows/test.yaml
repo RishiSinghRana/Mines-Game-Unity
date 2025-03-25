@@ -1,16 +1,38 @@
-name: Experiments
+name: Run Tests for MinesGame
 
-#on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch: # Allows manual trigger
 
-on: [workflow_dispatch]
-  
+permissions:
+  contents: read
+
 jobs:
-  Test:
-    name: Test
+  test:
+    name: Run Unit Tests
     runs-on: ubuntu-latest
+
     steps:
-     - name: Checking Directory
-       run: |
-         pwd -P
-         which zip
-         zip --help
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Unity Test Runner
+        uses: game-ci/unity-test-runner@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          testMode: editmode # Change to 'playmode' if testing play mode
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: Test-Results
+          path: artifacts/
