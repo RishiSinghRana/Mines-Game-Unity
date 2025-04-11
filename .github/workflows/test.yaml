@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: read
+  actions: write  # Added for posting results
 
 jobs:
   test:
@@ -30,6 +31,9 @@ jobs:
         with:
           testMode: editmode # Change to 'playmode' if testing play mode
           githubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Ensure Artifacts Directory
+        run: mkdir -p artifacts/
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
