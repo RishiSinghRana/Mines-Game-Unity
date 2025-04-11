@@ -13,7 +13,7 @@ permissions:
   checks: write
   pull-requests: write
   packages: write
-  
+
 jobs:
   build:
     name: Build MinesGame
@@ -32,7 +32,6 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Git LFS
       - name: Create LFS File List
         run: git lfs ls-files -l | cut -d' ' -f1 | sort > .lfs-assets-id
 
@@ -46,8 +45,8 @@ jobs:
       - name: Git LFS Pull
         run: git lfs pull
 
-      # Cache Unity Library
-      - uses: actions/cache@v4
+      - name: Cache Unity Library
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-${{ matrix.targetPlatform }}-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
@@ -55,14 +54,12 @@ jobs:
             Library-${{ matrix.targetPlatform }}
             Library-
 
-      # Get commit ID
       - name: Get Commit ID
         id: get_commit_id
         run: |
           COMMIT_ID=$(git log -1 --pretty=%h)
           echo "COMMIT_ID=${COMMIT_ID}" >> $GITHUB_ENV
 
-      # Build using GameCI Unity Builder
       - name: Build Project
         id: build_project
         uses: game-ci/unity-builder@v4
@@ -75,15 +72,20 @@ jobs:
           allowDirtyBuild: true
           versioning: Semantic
 
-      # Modify index.html for fullscreen WebGL
       - name: Modify WebGL index.html
         run: |
           INDEX=$(find ./ -name index.html)
-          sed -i 's/width=960 height=600/width=auto height=auto/' $INDEX
-          sed -i 's/style="width: 960px; height: 600px;/style="width: 100%; height: 100%;/' $INDEX
-          sed -i 's/});/});\n      var WAMScore = 0; var getWAMScore = msg => (WAMScore = parseInt(msg), console.log("Win:" + WAMScore));/' $INDEX
+          echo "Modifying $INDEX"
+          sudo chmod u+w "$INDEX"
+          sudo chmod u+w $(dirname "$INDEX")
 
-      # Upload Build Artifacts
+          sed -i 's/width=960 height=600/width=auto height=auto/' "$INDEX"
+          sed -i 's/style="width: 960px; height: 600px;/style="width: 100%; height: 100%;/' "$INDEX"
+          sed -i 's/});/});\n      var WAMScore = 0; var getWAMScore = msg => (WAMScore = parseInt(msg), console.log("Win:" + WAMScore));/' "$INDEX"
+
+      - name: List WebGL Output (for debug)
+        run: ls -R build/WebGL
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -102,13 +104,11 @@ jobs:
           name: MinesGame_WebGL_${{ needs.build.outputs.buildVersion }}_${{ needs.build.outputs.commitID }}
           path: build-artifacts/WebGL
 
-      # Zip the build
       - name: Zip WebGL Build
         run: |
           cd build-artifacts/WebGL
           zip -r MinesGame_WebGL_${{ needs.build.outputs.buildVersion }}_${{ needs.build.outputs.commitID }}.zip .
 
-      # Create GitHub Release
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         env:
